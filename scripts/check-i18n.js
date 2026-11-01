@@ -37,6 +37,13 @@ const referencedKeys = new Set();
 for (const file of sourceFiles(sourceRoot)) {
   if (file.includes(`${path.sep}i18n${path.sep}locales${path.sep}`)) continue;
   const source = fs.readFileSync(file, 'utf8');
+  // The screen picker builds its key names from an explicit suffix list.
+  const pickerKeys = source.match(/function getScreenPickerCopy\(\)\s*\{\s*const keys = \[([\s\S]*?)\];/);
+  if (pickerKeys) {
+    for (const match of pickerKeys[1].matchAll(/['"]([A-Za-z0-9]+)['"]/g)) {
+      referencedKeys.add(`screenPicker.${match[1]}`);
+    }
+  }
   const patterns = [
     /(?:\bt|\._t)\(\s*['"]([^'"]+)['"]/g,
     /\btranslate\(\s*[^,\n]+,\s*['"]([^'"]+)['"]/g,
@@ -51,6 +58,8 @@ for (const file of sourceFiles(sourceRoot)) {
     /setAppliedErrorDetail\(\s*['"][^'"]+['"]\s*,\s*[^,\n]+,\s*['"]([^'"]+)['"]/g,
     /\[\s*['"][^'"]+['"]\s*,\s*['"]((?:audio|server|update)\.[^'"]+)['"]\s*\]/g,
     /data-(?:haven-)?i18n(?:-title|-aria-label)?=["']([^"']+)["']/g,
+    // XLE keys also appear in fixed error maps and conditional translations.
+    /['"](xle\.[A-Za-z0-9.]+)['"]/g,
   ];
   for (const pattern of patterns) {
     for (const match of source.matchAll(pattern)) referencedKeys.add(match[1]);

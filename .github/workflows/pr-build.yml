@@ -1,14 +1,23 @@
-name: Validate Haven Desktop PR
+name: Build and validate Haven Desktop
 
 on:
   pull_request:
+  push:
+    branches:
+      - feature/xle-desktop-admin
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: desktop-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-windows:
     runs-on: windows-2022
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,6 +34,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Check translations
+        run: npm run i18n:check
+
       - name: Build native audio addon
         run: npm run build:native
 
@@ -40,14 +52,35 @@ jobs:
           $env:ELECTRON_RUN_AS_NODE = "1"
           .\dist\win-unpacked\Haven.exe -e "const a=require('./dist/win-unpacked/resources/native/haven_audio.node'); if(typeof a.startCapture!=='function') process.exit(1)"
 
+      - name: Record Windows artifact checksums and source
+        shell: pwsh
+        run: |
+          $installers = @(Get-ChildItem dist -Filter *.exe)
+          if ($installers.Count -eq 0) { throw "No Windows installer was produced" }
+          $installers | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)"
+          } | Set-Content dist/SHA256SUMS.txt -Encoding utf8
+          @{
+            repository = $env:GITHUB_REPOSITORY
+            ref = $env:GITHUB_REF
+            commit = $env:GITHUB_SHA
+            run_id = $env:GITHUB_RUN_ID
+          } | ConvertTo-Json | Set-Content dist/build-info.json -Encoding utf8
+
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: haven-desktop-windows
-          path: dist/*.exe
+          path: |
+            dist/*.exe
+            dist/SHA256SUMS.txt
+            dist/build-info.json
+          if-no-files-found: error
           retention-days: 30
 
   build-linux:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,6 +100,9 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Check translations
+        run: npm run i18n:check
 
       - name: Build native audio addon
         run: npm run build:native
@@ -90,6 +126,7 @@ jobs:
           retention-days: 30
 
   build-macos:
+    if: github.event_name == 'pull_request'
     runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
@@ -106,6 +143,9 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Check translations
+        run: npm run i18n:check
 
       - name: Build native audio addon
         run: npm run build:native

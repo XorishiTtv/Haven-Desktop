@@ -117,6 +117,16 @@ GitHub Actions builds the Windows `.exe` and Linux `.AppImage` / `.deb`, then pu
 
 ## Architecture
 
+### Xorishi Lore Engine administration (this fork)
+
+Open **View → XLE Administration** or press **Ctrl+Shift+L** while connected
+and signed in as a Haven server administrator. The panel shows XLE status,
+character/provider configuration, reviewed bot provisioning, and manual AI
+previews. It requires a server with the XLE Phase 1 foundation.
+
+See [XLE-DESKTOP.md](XLE-DESKTOP.md) for setup, supported APIs, security,
+and the current configuration/memory limits.
+
 ```
 Haven-Desktop/
 ├── src/

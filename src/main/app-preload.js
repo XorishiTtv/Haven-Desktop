@@ -277,7 +277,7 @@ contextBridge.exposeInMainWorld('__havenDesktopPage', {
 for (const channel of [
   'voice:mute-toggle', 'voice:deafen-toggle', 'voice:ptt-toggle', 'voice:ptt-down', 'voice:ptt-up',
   'voice:ptm-down', 'voice:ptm-up', 'music:media-key', 'voice-overlay:enabled',
-  'notification-clicked', 'app:navigate-deep-link', 'screen:prepare-share', 'screen:prepare-share-cancel',
+  'notification-clicked', 'app:navigate-deep-link', 'xle:open-admin', 'screen:prepare-share', 'screen:prepare-share-cancel',
 ]) {
   ipcRenderer.on(channel, (_event, payload) => toPageWorld(channel, payload));
 }
