@@ -16,7 +16,7 @@
 // ═══════════════════════════════════════════════════════════
 
 function installPageWorld(bridge, deps) {
-  const { BoundedPcmRing, screenShareVideo, SERVER_LOCALE_KEY } = deps;
+  const { BoundedPcmRing, screenShareVideo, xleAdmin, SERVER_LOCALE_KEY } = deps;
   const { normalizeVideoEncoderPreference, applyVideoEncoderPreference } = screenShareVideo;
 
   // Events from the app, forwarded by the preload: one handler per kind.
@@ -32,6 +32,9 @@ function installPageWorld(bridge, deps) {
   function t(key, values) {
     return bridge.t(key, values);
   }
+
+  const xlePanel = xleAdmin.installXleAdmin({ window, document, t });
+  on('xle:open-admin', () => xlePanel.open());
 
   // The latest native capture status, so the share can stop waiting for
   // audio as soon as the capture reports a failure.
@@ -1498,6 +1501,7 @@ function pageWorldSource() {
   const { BoundedPcmRing } = require('./screen-share-audio');
   const { SERVER_LOCALE_KEY } = require('../i18n/server-bridge');
   const videoSource = fs.readFileSync(path.join(__dirname, 'screen-share-video.js'), 'utf8');
+  const xleSource = fs.readFileSync(path.join(__dirname, 'xle-admin.js'), 'utf8');
   return [
     '(function () {',
     `const BoundedPcmRing = ${BoundedPcmRing.toString()};`,
@@ -1506,9 +1510,15 @@ function pageWorldSource() {
     videoSource,
     'return module.exports;',
     '})();',
+    'const xleAdmin = (function () {',
+    'const module = { exports: {} };',
+    xleSource,
+    'return module.exports;',
+    '})();',
     `(${installPageWorld.toString()})(window.__havenDesktopPage, {`,
     '  BoundedPcmRing,',
     '  screenShareVideo,',
+    '  xleAdmin,',
     `  SERVER_LOCALE_KEY: ${JSON.stringify(SERVER_LOCALE_KEY)},`,
     '});',
     '})();',

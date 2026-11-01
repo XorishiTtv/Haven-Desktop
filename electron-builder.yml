@@ -4,7 +4,7 @@ copyright: Copyright © 2024-2026 Haven
 
 publish:
   - provider: github
-    owner: ancsemi
+    owner: XorishiTtv
     repo: Haven-Desktop
     releaseType: release
 

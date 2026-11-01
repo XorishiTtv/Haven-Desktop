@@ -3029,6 +3029,12 @@ function buildAppMenu() {
       label: t('menu.view'),
       submenu: [
         {
+          label: t('xle.title'),
+          accelerator: 'CmdOrCtrl+Shift+L',
+          click() { safeSend(getActiveContents(), 'xle:open-admin'); },
+        },
+        { type: 'separator' },
+        {
           label: t('menu.reload'),
           accelerator: 'CmdOrCtrl+R',
           click() { getActiveContents()?.reload(); },
